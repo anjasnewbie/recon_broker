@@ -20,18 +20,22 @@ type CommandPayload struct {
 }
 
 func main() {
+
+	//check if another instance is running
+
 	//[0] =
 	//1   = timeout
 	//[2] = base_binary
 	//[n] = parameter
 	cfg, err := ini.Load("/app/Content/configurations/remote-agent.ini")
 	agent_address := cfg.Section("").Key("agent_address").String()
-	static_key := cfg.Section("").Key("agent_address").String()
+	static_key := cfg.Section("").Key("static_key").String()
 	if err != nil {
 		fmt.Printf("Fail to read file: %v", err)
 		os.Exit(1)
 	}
 	httpposturl := agent_address + "/execute"
+
 	timeout, err := strconv.Atoi(os.Args[1])
 	if err != nil {
 		// handle error
@@ -62,7 +66,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(commandJson))
+	if error != nil {
+		fmt.Println("remote agent error")
+		os.Exit(0)
+	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	client := &http.Client{}
@@ -72,6 +81,6 @@ func main() {
 	}
 	defer response.Body.Close()
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println("response Body:", string(body))
+	fmt.Println(string(body))
 	os.Exit(0)
 }
